@@ -1,42 +1,47 @@
-//package project;
+package Messaging;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.InetAddress;
 import java.net.Socket;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.Scanner;
 
-public class Client {
-public static void main(String[] args) {
-	try {Socket s = new Socket("35.39.165.69",6666);
-	DataOutputStream dout= new DataOutputStream(s.getOutputStream());
-	DataInputStream dis= new DataInputStream(s.getInputStream());
-	Scanner sc = new Scanner(System.in);
-	System.out.println("Connected..");
-	System.out.println("your are connected to "+s.getRemoteSocketAddress().toString());
-	System.out.println("press q to exit the program");
-	String word =" ";
+public class Client extends Network  {
+
+	public void connect(String ip, int portnum){
+		try {
+			socket = new Socket(InetAddress.getByName(ip), portnum);
+			dout= new DataOutputStream(socket.getOutputStream());
+			dis= new DataInputStream(socket.getInputStream());
+			System.out.println("Connected..");
+			System.out.println("your are connected to "+socket.getRemoteSocketAddress().toString());
+			con = new ArrayList<Connections>();
+			con.add(new Connections(InetAddress.getByName(ip),portnum));
+			
+} catch (UnknownHostException e) {
 	
-	while(!word.equals("q")) {
+	e.printStackTrace();
+} catch (IOException e) {
 	
-	dout.writeUTF(word);
-	Runnable runnable = ()->{
+	e.printStackTrace();
+}
+}
+
+public void exit() {
 	try {
-		System.out.println(dis.readUTF());
-		dout.flush();
+		dout.close();
+		socket.close();
+		dis.close();
 	} catch (IOException e) {
 		// TODO Auto-generated catch block
 		e.printStackTrace();
 	}
-		
-		};
-		runnable.run();
-		word = sc.nextLine();
-		
-	}
 	
-	dout.close();
-	s.close();
-	}catch(Exception e) {System.out.println(e);}
-}
-}
+}}

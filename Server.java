@@ -1,39 +1,41 @@
+package Messaging;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.Scanner;
 
-public class Server {
-public static void main(String[] args) {
-		
+public class Server extends Network  {
 	
-	try {
+	public void openPort(int port) {
+		try {
+			server = new ServerSocket(port);
+			System.out.print("Waiting for a connection...");
+			 socket =server.accept();
+			dout = new DataOutputStream(socket.getOutputStream());
+			System.out.println("Connected...");
+			System.out.println("Your connected "+socket.getRemoteSocketAddress().toString());
+			dis = new DataInputStream(socket.getInputStream());
+			con=new ArrayList<Connections>();
 		
-		ServerSocket server = new ServerSocket(6666);
-		System.out.println("Waiting for a connection...");
-		
-		Socket stock = server.accept();
-		DataOutputStream dout = new DataOutputStream(stock.getOutputStream());
-		System.out.println("Connected to "+stock.getRemoteSocketAddress().toString());
-		DataInputStream dis= new DataInputStream(stock.getInputStream());
-		
-		
-		System.out.println("Press q to exit the program!");
-		Scanner sc = new Scanner(System.in);
-		String word= " ";
-		
-		while(!word.equals("q")) {
-			
-			word = sc.nextLine();
-			dout.writeUTF(word);
-			System.out.println(dis.readUTF());
-			dout.flush();
-			
+			con.add(new Connections(InetAddress.getLocalHost(),port));
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-		
-		dout.close();
-		server.close();
-	}catch(Exception e) {System.out.println(e);}
-}
+	}
+	
+	public void exit() {
+		try {
+			dout.close();
+			server.close();
+		}catch(IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
 }
