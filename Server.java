@@ -1,41 +1,77 @@
 package Messaging;
 
+import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Scanner;
 
-public class Server extends Network  {
+public class Server extends Network{
+	private static ServerSocket welcomeSocket;
+
 	
-	public void openPort(int port) {
-		try {
-			server = new ServerSocket(port);
-			System.out.print("Waiting for a connection...");
-			 socket =server.accept();
-			dout = new DataOutputStream(socket.getOutputStream());
-			System.out.println("Connected...");
-			System.out.println("Your connected "+socket.getRemoteSocketAddress().toString());
-			dis = new DataInputStream(socket.getInputStream());
-			con=new ArrayList<Connections>();
+	public static void main(String[] args) throws IOException{
+	    try {
+			welcomeSocket = new ServerSocket(3158); // CCPort established
+			while (true) {
+				Socket connectionSocket = welcomeSocket.accept();
+				ClientHandler ch = new ClientHandler(connectionSocket);
+				System.out.println(connectionSocket.getRemoteSocketAddress().toString()+ " has connected!");
+			}
+		}catch(Exception e) {
+				System.out.println("ERROR: Server could not be started.");
+			}
+	    finally{
+	      try{
+	        System.out.println("Server socket closed.");
+	      } catch(Exception e){
+	        e.printStackTrace();
+	      }
+	    }
+	  
+	}
+	
+	@Override
+	protected void exit() {
 		
-			con.add(new Connections(InetAddress.getLocalHost(),port));
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		
 	}
-	
-	public void exit() {
-		try {
-			dout.close();
-			server.close();
-		}catch(IOException e) {
-			e.printStackTrace();
-		}
-	}
-	
 }
+class ClientHandler extends Network implements Runnable	{
+		  Socket connectionSocket;
+		  String fromClient;
+		  String clientCommand;
+		  String frstln;
+		  int port;
+
+		  public ClientHandler(Socket connectionSocket){
+		      this.connectionSocket = connectionSocket;
+
+		      System.out.println("-- Client Connected --");
+		      run();
+		  }
+		
+		  public void run()	{
+		    while(true){
+		      try{
+		        
+		       
+		      }catch(Exception e) {
+		    	  exit();
+		      }
+		    }
+		  }
+
+		@Override
+		protected void exit() {
+			// TODO Auto-generated method stub
+			
+		}
+}
+	
+
