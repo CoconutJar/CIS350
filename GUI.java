@@ -1,30 +1,77 @@
+package Messaging;
+import java.awt.*;
+import javax.swing.*;
+import java.awt.event.*;
+import java.util.*;
+import java.text.*;
 
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
-import javax.swing.JComboBox;
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JList;
-import java.awt.BorderLayout;
-import java.awt.event.ActionListener;
-import java.awt.event.ActionEvent;
-public class GUI {
-//Note: Typically the main method will be in a
-//separate class. As this is a simple one class
-//example it's all in the one class.
-public static void main(String[] args) {
-	new GUI();
-}
+public class GUI extends JFrame implements ActionListener {
+// buttons
+JButton IPaddress, Send;
+// text field
+JTextArea Chat;
+JTextField ipaddress, sent;
+JLabel Ipaddress;
 
-public GUI(){
-	JFrame guiFrame = new JFrame();
-	//make sure the program exits when the frame closes
-	guiFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-	guiFrame.setTitle("Example GUI");
-	guiFrame.setSize(300,250);
-	//This will center the JFrame in the middle of the screen
-	guiFrame.setLocationRelativeTo(null);
-	JTextField textField = new JTextField(20);
+public static void main (String args[]) {
+	GUI gui = new GUI();
+	gui.setTitle("Chat Screen");
+	gui.pack();
+	gui.setVisible(true);
 }
+public GUI() {
+	setLayout(new GridBagLayout());
+	GridBagConstraints loc = new GridBagConstraints();
+	// TEXT AREA
+	Chat = new JTextArea(20,20);
+	 JScrollPane scrollPane = new JScrollPane(Chat);
+     loc.gridx = 0;
+     loc.gridy = 1;
+     loc.gridheight = 10;  
+     loc.insets.left = 20;
+     loc.insets.right = 20;
+     loc.insets.bottom = 20;
+     add(scrollPane, loc);  
+	// IPADDRESS TEXT LABEL
+     loc = new GridBagConstraints();
+     loc.gridx = 0;
+     loc.gridy = 0;
+     loc.insets.bottom = 20;
+     loc.insets.top = 20;
+     add(new JLabel("CHAT"), loc);
+     // TEXTFIELD
+     ipaddress = new JTextField(15);
+     loc.gridx = 2;
+     loc.gridy = 9;
+     loc.gridwidth = 1;
+     add(ipaddress,loc);
+     sent = new JTextField(15);
+     loc.gridx = 2;
+     loc.gridy = 3;
+     loc.gridwidth = 1;
+     add(sent,loc);
+     //BUTTONS
+     IPaddress = new JButton (" Send IPaddress");
+     loc.gridx = 2;
+     loc.gridy = 4;
+     loc.gridwidth = 1;
+     add(IPaddress,loc);
+     Send = new JButton ("Send Chat");
+     loc.gridx = 2;
+     loc.gridy = 10;
+     loc.gridwidth = 1;
+     add(Send,loc);
+     
+     // ACTIONLISTENERS
+     Send.addActionListener(this);
+     IPaddress.addActionListener(this);     
+}
+public void actionPerformed (ActionEvent e) {
+	JComponent buttonPressed = (JComponent) e.getSource();
+	
+	
+}
+     
+     
+     
 }
