@@ -22,30 +22,33 @@ protected ServerSocket serverSocket;
 protected ServerSocket server;
 
 public void accept(String path) {
-	acceptfile(path,con.get(0));
+	acceptfile(path,con.get(1));
 }
 public void send(String path) {
-	sendfile(path,con.get(0));
+	sendfile(path,con.get(1));
 }
 
 
 public void message() { 
-				System.out.println("press q to exit the program");
+				//System.out.println("press q to exit the program");
 		String word =" ";
 		try {	
 		
 			Scanner sc = new Scanner(System.in);
 		while(!word.equals("q")) {
-		word = sc.nextLine();
+			
+				word = sc.nextLine();
 			
 				dout.writeUTF(word);
 			
 			System.out.println(dis.readUTF());
 			dout.flush();
+			
 		}} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
 	}
 	
 protected abstract void exit();

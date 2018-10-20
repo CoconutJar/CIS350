@@ -7,7 +7,7 @@ import java.text.*;
 
 public class GUI extends JFrame implements ActionListener {
 // buttons
-JButton IPaddress, Send;
+JButton IPaddress, Send, Connect;
 // text field
 JTextArea Chat;
 JTextField ipaddress, sent;
@@ -42,12 +42,12 @@ public GUI() {
      // TEXTFIELD
      ipaddress = new JTextField(15);
      loc.gridx = 2;
-     loc.gridy = 9;
+     loc.gridy = 3;
      loc.gridwidth = 1;
      add(ipaddress,loc);
      sent = new JTextField(15);
      loc.gridx = 2;
-     loc.gridy = 3;
+     loc.gridy = 9;
      loc.gridwidth = 1;
      add(sent,loc);
      //BUTTONS
@@ -61,7 +61,11 @@ public GUI() {
      loc.gridy = 10;
      loc.gridwidth = 1;
      add(Send,loc);
-     
+     Connect = new JButton("Connect");
+     loc.gridx = 2;
+     loc.gridy = 1;
+     loc.gridwidth = 1;
+     add(Connect,loc);
      // ACTIONLISTENERS
      Send.addActionListener(this);
      IPaddress.addActionListener(this);     
@@ -69,6 +73,29 @@ public GUI() {
 public void actionPerformed (ActionEvent e) {
 	JComponent buttonPressed = (JComponent) e.getSource();
 	
+	if(buttonPressed == Send)
+		displaychat();
+	else if(buttonPressed == IPaddress)
+		displayIPaddress();
+	else if(buttonPressed == Connect)
+		runcode();
+}		
+private void displaychat()
+{
+	String str = sent.getText();
+	if (str.length() == 0)
+	{
+		JOptionPane.showMessageDialog(this, "Type a message");
+	}
+	else 
+		Chat.append(str);
+}
+private void displayIPaddress() 
+{
+
+}
+private void runcode()
+{
 	
 }
      

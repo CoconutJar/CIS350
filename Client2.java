@@ -13,7 +13,7 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Scanner;
 
-public class Client extends Network  {
+public class Client2 extends Network  {
 
 	public void connect(String ip, int portnum){
 		try {
