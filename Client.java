@@ -1,42 +1,53 @@
-//package project;
-
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.Socket;
 import java.util.Scanner;
 
+//import java.util.StringTokenizer;
+
 public class Client {
-public static void main(String[] args) {
-	try {Socket s = new Socket("35.39.165.69",6666);
-	DataOutputStream dout= new DataOutputStream(s.getOutputStream());
-	DataInputStream dis= new DataInputStream(s.getInputStream());
-	Scanner sc = new Scanner(System.in);
-	System.out.println("Connected..");
-	System.out.println("your are connected to "+s.getRemoteSocketAddress().toString());
-	System.out.println("press q to exit the program");
-	String word =" ";
-	
-	while(!word.equals("q")) {
-	
-	dout.writeUTF(word);
-	Runnable runnable = ()->{
-	try {
-		System.out.println(dis.readUTF());
-		dout.flush();
-	} catch (IOException e) {
-		// TODO Auto-generated catch block
-		e.printStackTrace();
+
+	boolean loggedIn = true;
+	DataInputStream dis;
+	DataOutputStream dos;
+	Socket s;
+	Scanner scn;
+
+	public void makeConnection(String Name) throws IOException {
+
+		scn = new Scanner(System.in);
+
+		InetAddress ip = InetAddress.getByName("localhost");
+
+		s = new Socket(ip, 3158);
+
+		dis = new DataInputStream(s.getInputStream());
+		dos = new DataOutputStream(s.getOutputStream());
+		loggedIn = true;
+
+		dos.writeUTF(Name);
+
 	}
-		
-		};
-		runnable.run();
-		word = sc.nextLine();
-		
+
+	public void sendMessage(String message) throws IOException {
+
+		dos.writeUTF(message);
+
+		if (message.equals("QUIT")) {
+			s.close();
+			scn.close();
+			loggedIn = false;
+		}
+
 	}
-	
-	dout.close();
-	s.close();
-	}catch(Exception e) {System.out.println(e);}
-}
+
+	public DataInputStream getDataInputStream() {
+		return this.dis;
+	}
+
+	public Socket getSocket() {
+		return s;
+	}
 }
