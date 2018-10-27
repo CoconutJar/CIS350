@@ -4,7 +4,9 @@ import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.Socket;
 
 import javax.swing.JButton;
@@ -16,20 +18,18 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
 public class GUI extends JFrame implements ActionListener {
-	/**
-		 * 
-		 */
+
 	private static final long serialVersionUID = 1L;
 	// buttons
 	JButton iPaddress, send, connect;
-// text field
+	// text field
 	JTextArea chat;
 	JTextField ipaddress, sent;
 	JLabel ipaddressLabel;
-	Client client;
 	Socket s;
 	DataInputStream dis;
-	protected boolean sendMessage = false;
+	boolean loggedIn;
+	DataOutputStream dos;
 
 	public static void main(String args[]) {
 		GUI gui = new GUI();
@@ -39,7 +39,7 @@ public class GUI extends JFrame implements ActionListener {
 	}
 
 	public GUI() {
-		client = new Client();
+
 		setLayout(new GridBagLayout());
 		GridBagConstraints loc = new GridBagConstraints();
 
@@ -100,40 +100,33 @@ public class GUI extends JFrame implements ActionListener {
 		JComponent buttonPressed = (JComponent) e.getSource();
 
 		if (buttonPressed == send) {
+
 			String msg = sent.getText();
 			try {
-				client.sendMessage(msg);
-				if (msg.equals("QUIT")) {
-					s.close();
-					connect.setEnabled(true);
-					ipaddress.setEnabled(true);
-					send.setEnabled(false);
-					sent.setEnabled(false);
-				}
+				sendMessage(msg);
 			} catch (IOException e2) {
 				e2.printStackTrace();
 			}
 
-		} else if (buttonPressed == iPaddress) {
+		}
+
+		else if (buttonPressed == iPaddress) {
+
 			displayIPaddress();
 
-		} else if (buttonPressed == connect) {
+		}
 
+		else if (buttonPressed == connect) {
 			try {
-				client.makeConnection(ipaddress.getText());
+				makeConnection(ipaddress.getText());
 			} catch (IOException e1) {
-				e1.printStackTrace();
 			}
 
 			Thread recieveMessages = new Thread(new Runnable() {
-
 				@Override
 				public void run() {
-
-					s = client.getSocket();
-					dis = client.getDataInputStream();
 					String chatText = "";
-					while (client.loggedIn) {
+					while (loggedIn) {
 						try {
 							// read the message sent to this client
 							if (!s.isClosed()) {
@@ -147,18 +140,50 @@ public class GUI extends JFrame implements ActionListener {
 							e.printStackTrace();
 						}
 					}
+
 				}
 			});
 
 			recieveMessages.start();
-			ipaddress.setEnabled(false);
-			connect.setEnabled(false);
-			sent.setEnabled(true);
-			send.setEnabled(true);
 		}
 	}
 
 	private void displayIPaddress() {
+
+	}
+
+	public void makeConnection(String Name) throws IOException {
+
+		InetAddress ip = InetAddress.getByName("localhost");
+
+		s = new Socket(ip, 3158);
+
+		dis = new DataInputStream(s.getInputStream());
+		dos = new DataOutputStream(s.getOutputStream());
+
+		loggedIn = true;
+
+		dos.writeUTF(Name);
+
+		ipaddress.setEnabled(false);
+		connect.setEnabled(false);
+		sent.setEnabled(true);
+		send.setEnabled(true);
+
+	}
+
+	public void sendMessage(String message) throws IOException {
+
+		dos.writeUTF(message);
+
+		if (message.equals("QUIT")) {
+			s.close();
+			loggedIn = false;
+			connect.setEnabled(true);
+			ipaddress.setEnabled(true);
+			send.setEnabled(false);
+			sent.setEnabled(false);
+		}
 
 	}
 

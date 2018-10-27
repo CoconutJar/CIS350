@@ -106,8 +106,8 @@ class ClientHandler implements Runnable {
 
 				} else if (fromClient.equals("-help")) {
 
-					dos.writeUTF("Enter '-list' to see who's available for messaging.\n "
-							+ "To send a message: <message> <recipicant>." + "Enter 'QUIT' to exit.");
+					dos.writeUTF("Enter '-list' to see who's available for messaging.\n"
+							+ "To send a message: <message> <recipicant>\n." + "Enter 'QUIT' to exit.");
 
 				} else {
 
