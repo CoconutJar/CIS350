@@ -1,45 +1,162 @@
-package Messaging;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Scanner;
+import java.util.StringTokenizer;
 
-public class Server extends Network  {
-	
-	public void openPort(int port) {
+public class Server {
+	private static ServerSocket welcomeSocket;
+	public static ArrayList<ClientHandler> con = new ArrayList<ClientHandler>();
+
+	public static void main(String[] args) throws IOException {
+
 		try {
-			server = new ServerSocket(port);
-			System.out.print("Waiting for a connection...");
-			 socket =server.accept();
-			dout = new DataOutputStream(socket.getOutputStream());
-			System.out.println("Connected...");
-			System.out.println("Your connected "+socket.getRemoteSocketAddress().toString());
-			dis = new DataInputStream(socket.getInputStream());
-			con=new ArrayList<Connections>();
-		
-			con.add(new Connections(InetAddress.getLocalHost(),port));
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			welcomeSocket = new ServerSocket(3158); // CCPort established
+		} catch (Exception e) {
+			System.err.println("ERROR: Server could not be started.");
 		}
-	}
-	
-	public void exit() {
+
 		try {
-			dout.close();
-			server.close();
-		}catch(IOException e) {
+			while (true) {
+
+				Socket connectionSocket = welcomeSocket.accept();
+				System.out.println(connectionSocket.getRemoteSocketAddress().toString() + " has connected!");
+
+				DataInputStream dis = new DataInputStream(connectionSocket.getInputStream());
+				DataOutputStream dos = new DataOutputStream(connectionSocket.getOutputStream());
+
+				ClientHandler client = new ClientHandler(connectionSocket, dis, dos);
+				con.add(client);
+				Thread t = new Thread(client);
+				t.start();
+			}
+
+		} catch (Exception e) {
+			System.err.println("ERROR: Connecting Client");
 			e.printStackTrace();
+
+		} finally {
+			try {
+				welcomeSocket.close();
+				System.out.println("Server socket closed.");
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
+
 	}
-	
 }
 
+class ClientHandler implements Runnable {
 
+	Socket connectionSocket;
+	String fromClient;
+	String clientName;
+	DataInputStream dis;
+	DataOutputStream dos;
+	boolean loggedIn;
 
+	public ClientHandler(Socket connectionSocket, DataInputStream dis, DataOutputStream dos) {
 
+		this.connectionSocket = connectionSocket;
+		this.dis = dis;
+		this.dos = dos;
+		this.loggedIn = true;
+
+	}
+
+	@Override
+	public void run() {
+
+		String name;
+		try {
+
+			name = dis.readUTF();
+			this.clientName = name;
+			boolean prevClient = false;
+			for (ClientHandler c : Server.con) {
+
+				if (c.clientName.equals(name)) {
+					dos.writeUTF("Welcome Back " + name + "!");
+					prevClient = true;
+					break;
+				}
+			}
+			if (!prevClient) {
+				dos.writeUTF("Welcome " + name + "!\n" + "Type -list to see who's online! :)\n"
+						+ "-help for more information!");
+			}
+
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
+
+		System.out.println("-- " + clientName + " is ready to chat! --");
+
+		try {
+			boolean hasNotQuit = true;
+
+			// Send Msgs
+			do {
+				fromClient = dis.readUTF();
+
+				System.out.println(fromClient);
+
+				if (fromClient.equals("-list")) {
+
+					dos.writeUTF("Users currently online: \n");
+					for (int i = 0; i < Server.con.size(); i++) {
+						if (Server.con.get(i).loggedIn)
+							dos.writeUTF(Server.con.get(i).clientName);
+					}
+
+				} else if (fromClient.equals("QUIT")) {
+
+					hasNotQuit = false;
+
+				} else if (fromClient.equals("-help")) {
+
+					dos.writeUTF("Enter '-list' to see who's available for messaging.\n "
+							+ "To send a message: <message> <recipicant>." + "Enter 'QUIT' to exit.");
+
+				} else {
+
+					// break the string into message and recipient part
+					StringTokenizer st = new StringTokenizer(fromClient);
+					String message = "";
+					int number = st.countTokens() - 1;
+
+					for (int i = 0; i < number; i++) {
+						message += st.nextToken() + " ";
+					}
+
+					String recipient = st.nextToken();
+					boolean found = false;
+					for (ClientHandler c : Server.con) {
+
+						if (c.clientName.equals(recipient) && c.loggedIn == true) {
+							c.dos.writeUTF(this.clientName + " sent : " + message);
+							found = true;
+							break;
+						}
+					}
+					if (!found) {
+						dos.writeUTF("Cant find user " + recipient
+								+ "\nEnter 'list' to see who's available for messaging \n:)");
+					}
+				}
+
+			} while (hasNotQuit);
+
+			this.loggedIn = false;
+			this.connectionSocket.close();
+
+		} catch (Exception e) {
+			System.err.println(e);
+			System.exit(1);
+		}
+	}
+}

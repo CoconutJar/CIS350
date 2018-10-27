@@ -1,49 +1,75 @@
-package Messaging;
-
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
 import java.util.Scanner;
 
-public class Client extends Network  {
+//import java.util.StringTokenizer;
 
-	public void connect(String ip, int portnum){
-		try {
-			socket = new Socket(InetAddress.getByName(ip), portnum);
-			dout= new DataOutputStream(socket.getOutputStream());
-			dis= new DataInputStream(socket.getInputStream());
-			System.out.println("Connected..");
-			System.out.println("your are connected to "+socket.getRemoteSocketAddress().toString());
-			con = new ArrayList<Connections>();
-			con.add(new Connections(InetAddress.getByName(ip),portnum));
-			
-} catch (UnknownHostException e) {
-	
-	e.printStackTrace();
-} catch (IOException e) {
-	
-	e.printStackTrace();
-}
-}
+public class Client {
+	static boolean loggedIn = true;
 
-public void exit() {
-	try {
-		dout.close();
-		socket.close();
-		dis.close();
-	} catch (IOException e) {
-		// TODO Auto-generated catch block
-		e.printStackTrace();
+	public static void main(String[] args) throws IOException {
+
+		Scanner scn = new Scanner(System.in);
+
+		InetAddress ip = InetAddress.getByName("localhost");
+
+		Socket s = new Socket(ip, 3158);
+
+		DataInputStream dis = new DataInputStream(s.getInputStream());
+		DataOutputStream dos = new DataOutputStream(s.getOutputStream());
+
+		System.out.println("Type a UserName to use in the chat room.");
+		String name = scn.nextLine();
+		dos.writeUTF(name);
+		String sReply = dis.readUTF();
+		System.out.println(sReply);
+
+		Thread sendMessage = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				while (loggedIn) {
+
+					// read the message to deliver.
+					String msg = scn.nextLine();
+
+					try {
+						// write on the output stream
+						dos.writeUTF(msg);
+
+						if (msg.equals("QUIT")) {
+							s.close();
+							scn.close();
+							loggedIn = false;
+						}
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		});
+
+		Thread readMessage = new Thread(new Runnable() {
+			@Override
+			public void run() {
+
+				while (loggedIn) {
+					try {
+						// read the message sent to this client
+						if (!s.isClosed())
+							while (dis.available() > 0) {
+								String msg = dis.readUTF();
+								System.out.println(msg);
+							}
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		});
+		sendMessage.start();
+		readMessage.start();
 	}
-	
-}}
-
-
+}
