@@ -3,73 +3,94 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
-import java.util.Scanner;
-
-//import java.util.StringTokenizer;
 
 public class Client {
-	static boolean loggedIn = true;
+	
+	Socket s;
+	DataInputStream dis;
+	boolean loggedIn;
+	DataOutputStream dos;
+	Client client;
+	
+	
+	/****
+	 * 
+	 * Sends the messages to the server using the output stream. If the message is
+	 * 'QUIT' the client disconnects from the server.
+	 * 
+	 ****/
+	public void sendMessage(String message) throws IOException {
 
-	public static void main(String[] args) throws IOException {
+		// Send the message using TCP.
+		dos.writeUTF(message);
 
-		Scanner scn = new Scanner(System.in);
+		if (message.equals("QUIT")) {
 
+			// Closes the connection.
+			s.close();
+			loggedIn = false;
+		}
+
+	}
+	
+	/****
+	 * 
+	 * Forms the TCP socket connection to the server in order to receive and send
+	 * messages.
+	 * 
+	 ****/
+	public void makeConnection(String Name) throws IOException {
+
+		// IP of the server to connect to.
 		InetAddress ip = InetAddress.getByName("localhost");
 
-		Socket s = new Socket(ip, 3158);
+		// Connection to server.
+		s = new Socket(ip, 3158);
 
-		DataInputStream dis = new DataInputStream(s.getInputStream());
-		DataOutputStream dos = new DataOutputStream(s.getOutputStream());
+		// Set up input and output stream to send and receive messages.
+		dis = new DataInputStream(s.getInputStream());
+		dos = new DataOutputStream(s.getOutputStream());
 
-		System.out.println("Type a UserName to use in the chat room.");
-		String name = scn.nextLine();
-		dos.writeUTF(name);
-		String sReply = dis.readUTF();
-		System.out.println(sReply);
+		// Sets logged in status to true.
+		loggedIn = true;
 
-		Thread sendMessage = new Thread(new Runnable() {
+		// Sends the UserName of the client to the server.
+		dos.writeUTF(Name);
+		
+		// Responsible for reading in any data from the server input stream.
+		// Adds any text received to the chatText box.
+		Thread recieveMessages = new Thread(new Runnable() {
 			@Override
 			public void run() {
+
+				// Will hold all messages received from server.
+				String chatText = "";
+
+				// If the client is loggedOff they wont receive any messages.
 				while (loggedIn) {
 
-					// read the message to deliver.
-					String msg = scn.nextLine();
-
+					// If the socket is still open.
+					// Read the message sent to this client.
 					try {
-						// write on the output stream
-						dos.writeUTF(msg);
-
-						if (msg.equals("QUIT")) {
-							s.close();
-							scn.close();
-							loggedIn = false;
+						if (!s.isClosed()) {
+							while (dis.available() > 0) {
+								String msg = dis.readUTF();
+								chatText += msg + "\n";
+								
+								// Update the chat in the GUI.
+								GUI.chat.setText(chatText);
+							}
 						}
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
 				}
+
 			}
 		});
 
-		Thread readMessage = new Thread(new Runnable() {
-			@Override
-			public void run() {
+		// Starts the thread.
+		recieveMessages.start();
 
-				while (loggedIn) {
-					try {
-						// read the message sent to this client
-						if (!s.isClosed())
-							while (dis.available() > 0) {
-								String msg = dis.readUTF();
-								System.out.println(msg);
-							}
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-				}
-			}
-		});
-		sendMessage.start();
-		readMessage.start();
 	}
 }

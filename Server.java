@@ -7,14 +7,29 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
 
+/*******************************************************************************************
+ * 
+ * Forms connections with clients.
+ * 
+ ******************************************************************************************/
 public class Server {
+
+	// Socket that awaits client connections.
 	private static ServerSocket welcomeSocket;
+
+	// Holds all client UserNames that have connected to the server.
 	public static ArrayList<ClientHandler> con = new ArrayList<ClientHandler>();
 
+	/****
+	 * 
+	 * Starts up a ServerSocket and constantly waits for clients connections and
+	 * starts a thread for
+	 * 
+	 ****/
 	public static void main(String[] args) throws IOException {
 
 		try {
-			welcomeSocket = new ServerSocket(3158); // CCPort established
+			welcomeSocket = new ServerSocket(3158); // ServerPort
 		} catch (Exception e) {
 			System.err.println("ERROR: Server could not be started.");
 		}
@@ -22,14 +37,22 @@ public class Server {
 		try {
 			while (true) {
 
+				// Waits for a client to connect.
 				Socket connectionSocket = welcomeSocket.accept();
+
 				System.out.println(connectionSocket.getRemoteSocketAddress().toString() + " has connected!");
 
+				// Set up input and output stream with the client to send and receive messages.
 				DataInputStream dis = new DataInputStream(connectionSocket.getInputStream());
 				DataOutputStream dos = new DataOutputStream(connectionSocket.getOutputStream());
 
+				// Creates a clientHandler object with the client.
 				ClientHandler client = new ClientHandler(connectionSocket, dis, dos);
+
+				// Adds the client to the arrayList of clients.
 				con.add(client);
+
+				// Makes a thread to allow the client and clientHandler to interact.
 				Thread t = new Thread(client);
 				t.start();
 			}
@@ -40,6 +63,7 @@ public class Server {
 
 		} finally {
 			try {
+				// Close the Socket in the event of an error.
 				welcomeSocket.close();
 				System.out.println("Server socket closed.");
 			} catch (Exception e) {
@@ -50,6 +74,11 @@ public class Server {
 	}
 }
 
+/*******************************************************************************************
+ * 
+ * Handles the client.
+ * 
+ ******************************************************************************************/
 class ClientHandler implements Runnable {
 
 	Socket connectionSocket;
@@ -59,6 +88,11 @@ class ClientHandler implements Runnable {
 	DataOutputStream dos;
 	boolean loggedIn;
 
+	/****
+	 * 
+	 * 
+	 * 
+	 ****/
 	public ClientHandler(Socket connectionSocket, DataInputStream dis, DataOutputStream dos) {
 
 		this.connectionSocket = connectionSocket;
@@ -68,27 +102,21 @@ class ClientHandler implements Runnable {
 
 	}
 
+	/****
+	 * 
+	 * Runs after the start function is called. Uses a do while loop to process
+	 * messages received by the server.
+	 * 
+	 ****/
 	@Override
 	public void run() {
 
 		String name;
 		try {
 
+			// Sets the first string received as the UserName for the client.
 			name = dis.readUTF();
 			this.clientName = name;
-			boolean prevClient = false;
-			for (ClientHandler c : Server.con) {
-
-				if (c.clientName.equals(name)) {
-					dos.writeUTF("Welcome Back " + name + "!");
-					prevClient = true;
-					break;
-				}
-			}
-			if (!prevClient) {
-				dos.writeUTF("Welcome " + name + "!\n" + "Type -list to see who's online! :)\n"
-						+ "-help for more information!");
-			}
 
 		} catch (IOException e1) {
 			e1.printStackTrace();
@@ -97,34 +125,46 @@ class ClientHandler implements Runnable {
 		System.out.println("-- " + clientName + " is ready to chat! --");
 
 		try {
+
+			// Do while conditional.
 			boolean hasNotQuit = true;
 
-			// Send Msgs
+			// Breaks down the messages received by the client into a command.
 			do {
-				fromClient = dis.readUTF();
 
+				// Waits for data.
+				fromClient = dis.readUTF();
 				System.out.println(fromClient);
 
+				// If the message is '-list' then the server responses with a list of
+				// online users.
 				if (fromClient.equals("-list")) {
 
-					dos.writeUTF("Users currently online: \n");
+					dos.writeUTF("Users currently online:");
+
+					// Iterates through the server list of users and sends the
+					// UserName of any client online.
 					for (int i = 0; i < Server.con.size(); i++) {
 						if (Server.con.get(i).loggedIn)
 							dos.writeUTF(Server.con.get(i).clientName);
 					}
 
+					// If the message is 'QUIT' set the while loop conditional to false.
 				} else if (fromClient.equals("QUIT")) {
 
 					hasNotQuit = false;
 
+					// Helps the Users
 				} else if (fromClient.equals("-help")) {
 
-					dos.writeUTF("Enter '-list' to see who's available for messaging.\n "
-							+ "To send a message: <message> <recipicant>." + "Enter 'QUIT' to exit.");
+					dos.writeUTF("Enter '-list' to see who's available for messaging.\n"
+							+ "To send a message: <message> <recipicant>\n." + "Enter 'QUIT' to exit.");
 
+					// If the message is not a command then it is assumed the client is trying to
+					// send a message.
 				} else {
 
-					// break the string into message and recipient part
+					// Break the string into message and recipient part.
 					StringTokenizer st = new StringTokenizer(fromClient);
 					String message = "";
 					int number = st.countTokens() - 1;
@@ -133,26 +173,39 @@ class ClientHandler implements Runnable {
 						message += st.nextToken() + " ";
 					}
 
+					// Sets the last token to the recipient.
 					String recipient = st.nextToken();
 					boolean found = false;
+
+					// Looks for the recipient userName in the server list of users.
 					for (ClientHandler c : Server.con) {
 
+						// If the recipient UserName is in the list and online then the message is sent.
 						if (c.clientName.equals(recipient) && c.loggedIn == true) {
+
+							// Grab the recipient's outputStream.
 							c.dos.writeUTF(this.clientName + " sent : " + message);
 							found = true;
 							break;
 						}
 					}
+
+					// If the Client is either offline or is not found in the arrayList send the
+					// client a message.
 					if (!found) {
 						dos.writeUTF("Cant find user " + recipient
-								+ "\nEnter 'list' to see who's available for messaging \n:)");
+								+ "\nEnter '-list' to see who's available for messaging \n:)");
 					}
 				}
 
 			} while (hasNotQuit);
 
+			// Set the online status to offline.
 			this.loggedIn = false;
+
+			// Close the Socket.
 			this.connectionSocket.close();
+			System.out.println(clientName + " has disconnected!");
 
 		} catch (Exception e) {
 			System.err.println(e);
