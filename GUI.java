@@ -1,3 +1,4 @@
+package WorkingVersion;
 
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -9,6 +10,9 @@ import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
@@ -28,17 +32,20 @@ public class GUI extends JFrame implements ActionListener {
 	JTextField ipaddress, sent;
 	JLabel ipaddressLabel;
 	Client client;
-	
 	/****
 	 * 
 	 * Starts up the GUI
 	 * 
 	 ****/
 	public static void main(String args[]) {
+		
 		GUI gui = new GUI();
 		gui.setTitle("Chat Screen");
 		gui.pack();
 		gui.setVisible(true);
+		gui.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		
+		
 	}
 	
 	/****
@@ -47,6 +54,19 @@ public class GUI extends JFrame implements ActionListener {
 	 * 
 	 ****/
 	public GUI() {
+	
+		JMenuBar menuBar = new JMenuBar();
+		JMenu file= new JMenu("FILE");
+		JMenuItem sendfile = new JMenuItem("sendfile");
+		JMenuItem connection = new JMenuItem("connect");
+		JMenuItem game = new JMenuItem("play Chess");
+		file.add(sendfile);
+		file.add(connection);
+		file.add(game);
+		menuBar.add(file);
+		
+		
+		
 		client = new Client();
 		setLayout(new GridBagLayout());
 		GridBagConstraints loc = new GridBagConstraints();
@@ -98,10 +118,22 @@ public class GUI extends JFrame implements ActionListener {
 		loc.gridy = 1;
 		loc.gridwidth = 1;
 		add(connect, loc);
+		
+		setJMenuBar(menuBar);
+		
+		game.addActionListener(t->{});
+		
+		sendfile.addActionListener(t->{
+			
+			Sendfile send = new Sendfile();
+		});
+		connection.addActionListener(t->{});
+
 
 		// ACTIONLISTENERS
 		send.addActionListener(this);
 		connect.addActionListener(this);
+		
 	}
 
 	/****
@@ -110,6 +142,10 @@ public class GUI extends JFrame implements ActionListener {
 	 * parameter of the component clicked.
 	 * 
 	 ****/
+	
+	
+	
+	
 	public void actionPerformed(ActionEvent e) {
 		JComponent buttonPressed = (JComponent) e.getSource();
 
