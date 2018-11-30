@@ -1,10 +1,11 @@
-package WorkingVersion;
+
 
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.io.IOException;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -15,7 +16,12 @@ import javax.swing.JTextField;
 public class SendfileGUI{
 	private String ip;
 	private String name;
+	private Client client;
 	
+  public SendfileGUI(Client client) {
+	  this.client = client;
+  }
+
   public void run() {
 	 JFrame f = new JFrame();
 	 JPanel panel = new JPanel();
@@ -164,11 +170,15 @@ public class SendfileGUI{
     JButton connect = new JButton("connect");
       panel.add(connect, constraints);
       connect.addActionListener(t->{
-    	  String fname1=tf2.getText();
-    	  String fname2=tf3.getText();
     	  String ip = tf1.getText();
-    	  Sendfile sending= new Sendfile();		
-    	  sending.sendfile(ip, fname1,fname2);
+    	  String port=tf2.getText();
+    	  String file=tf3.getText();
+    	  
+    	  try {
+			client.sendFile(ip, port, file);
+    	  } catch (IOException e) {
+    		  e.printStackTrace();
+    	  }
     	  
       });
 

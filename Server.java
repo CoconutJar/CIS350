@@ -1,4 +1,4 @@
-package WorkingVersion;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.FileOutputStream;
@@ -41,6 +41,8 @@ public class Server  {
 
 				// Waits for a client to connect.
 				Socket connectionSocket = welcomeSocket.accept();
+				
+				String userIP = connectionSocket.getInetAddress().toString();
 
 				System.out.println(connectionSocket.getRemoteSocketAddress().toString() + " has connected!");
 
@@ -49,7 +51,7 @@ public class Server  {
 				DataOutputStream dos = new DataOutputStream(connectionSocket.getOutputStream());
 
 				// Creates a clientHandler object with the client.
-				ClientHandler client = new ClientHandler(connectionSocket, dis, dos);
+				ClientHandler client = new ClientHandler(connectionSocket, dis, dos, userIP);
 
 				// Adds the client to the arrayList of clients.
 				con.add(client);
@@ -87,21 +89,25 @@ class ClientHandler implements Runnable {
 	Socket connectionSocket;
 	String fromClient;
 	String clientName;
+	String ip;
 	DataInputStream dis;
 	DataOutputStream dos;
 	boolean loggedIn;
+	int port;
 
 	/****
 	 * 
 	 * 
 	 * 
 	 ****/
-	public ClientHandler(Socket connectionSocket, DataInputStream dis, DataOutputStream dos) {
+	public ClientHandler(Socket connectionSocket, DataInputStream dis, DataOutputStream dos, String ip) {
 
 		this.connectionSocket = connectionSocket;
 		this.dis = dis;
 		this.dos = dos;
 		this.loggedIn = true;
+		this.ip = ip;
+		
 
 	}
 
@@ -119,6 +125,10 @@ class ClientHandler implements Runnable {
 
 			// Sets the first string received as the UserName for the client.
 			name = dis.readUTF();
+			StringTokenizer st = new StringTokenizer(name);
+			name = st.nextToken();
+			String port2 = st.nextToken();
+			port = Integer.parseInt(port2);
 			this.clientName = name;
 
 		} catch (IOException e1) {
@@ -128,39 +138,6 @@ class ClientHandler implements Runnable {
 		System.out.println("-- " + clientName + " is ready to chat! --");
 
 		try {
-
-			Runnable fileLisener=()->{
-				System.out.println("Test");
-				while (true) {
-					try {
-						Socket sock= connectionSocket;
-						DataInputStream datainput = new DataInputStream(sock.getInputStream());
-						FileOutputStream fos = new FileOutputStream("file");
-						byte[] buffer = new byte[4096];
-						
-						int filesize = 15123; // Send file size in separate msg
-						int read = 0;
-						int totalRead = 0;
-						int remaining = filesize;
-						while((read = datainput.read(buffer, 0, Math.min(buffer.length, remaining))) > 0) {
-							totalRead += read;
-							remaining -= read;
-							System.out.println("read " + totalRead + " bytes.");
-							fos.write(buffer, 0, read);
-						}
-						
-						fos.close();
-						dis.close();
-						sock.close();
-					}
-						catch(IOException e) {
-						e.printStackTrace();
-					}
-					
-				}
-			};
-			Thread t2= new Thread(fileLisener);
-			t2.start();
 	
 			// Do while conditional.
 			boolean hasNotQuit = true;
@@ -182,7 +159,7 @@ class ClientHandler implements Runnable {
 					// UserName of any client online.
 					for (int i = 0; i < Server.con.size(); i++) {
 						if (Server.con.get(i).loggedIn)
-							dos.writeUTF(Server.con.get(i).clientName);
+							dos.writeUTF(Server.con.get(i).ip + " " + Server.con.get(i).clientName + " "+ Server.con.get(i).port);
 					}
 
 					// If the message is 'QUIT' set the while loop conditional to false.

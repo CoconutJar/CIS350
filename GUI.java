@@ -1,4 +1,4 @@
-package WorkingVersion;
+
 
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -123,7 +123,7 @@ public class GUI extends JFrame implements ActionListener {
 		
 		sendfile.addActionListener(t->{
 			
-			SendfileGUI send = new SendfileGUI();
+			SendfileGUI send = new SendfileGUI(client);
 			send.run();
 			
 		});
