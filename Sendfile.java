@@ -1,170 +1,111 @@
 package WorkingVersion;
 
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
+import java.awt.Frame;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Scanner;
 
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
+import javax.swing.JOptionPane;
 
-public class Sendfile{
-
-  public Sendfile() {
-	 JFrame f = new JFrame();
-	 JPanel panel = new JPanel();
-	 f.getContentPane().add(panel);
-	 f.setSize(400, 300);
-	 f.setVisible(true);
-
-	  
-    
-    GridBagConstraints constraints = new GridBagConstraints();
-    GridBagLayout layout = new GridBagLayout();
-    panel.setLayout(layout);
-    constraints.insets= new Insets(2,2,2,2);
-    constraints.anchor = GridBagConstraints.WEST;
-
-    constraints.gridy = 0;
-    JLabel label = new JLabel("Ip address: ");
-    panel.add(label, constraints);
-
-    JTextField tf1 = new JTextField(20);
-    tf1.setText("localhost");
-    
-    tf1.addMouseListener(new MouseListener() {
-		@Override
-		public void mouseClicked(MouseEvent arg0) {
-			if(arg0.getClickCount()==2) {
-				tf1.setText("");
-			}
-			
-		}
-
-		@Override
-		public void mouseEntered(MouseEvent arg0) {
-			// TODO Auto-generated method stub
-			
-		}
-
-		@Override
-		public void mouseExited(MouseEvent arg0) {
-			// TODO Auto-generated method stub
-			
-		}
-
-		@Override
-		public void mousePressed(MouseEvent arg0) {
-			// TODO Auto-generated method stub
-			
-		}
-
-		@Override
-		public void mouseReleased(MouseEvent arg0) {
-			// TODO Auto-generated method stub
-			
-		}
-    	
-    });
-    panel.add(tf1, constraints);
-    
-
-    constraints.gridy = 1;
-    label = new JLabel("Your directory: ");
-    panel.add(label, constraints);
-    
-    JTextField tf2 = new JTextField(20);
-    
-    tf2.addMouseListener(new MouseListener() {
-		@Override
-		public void mouseClicked(MouseEvent arg0) {
-			if(arg0.getClickCount()==2) {
-				tf2.setText("");
-			}
-			
-		}
-
-		@Override
-		public void mouseEntered(MouseEvent arg0) {
-			// TODO Auto-generated method stub
-			
-		}
-
-		@Override
-		public void mouseExited(MouseEvent arg0) {
-			// TODO Auto-generated method stub
-			
-		}
-
-		@Override
-		public void mousePressed(MouseEvent arg0) {
-			// TODO Auto-generated method stub
-			
-		}
-
-		@Override
-		public void mouseReleased(MouseEvent arg0) {
-			// TODO Auto-generated method stub
-			
-		}
-    	
-    });
-
-    panel.add(tf2, constraints);
-    
-    constraints.gridy=2;
-    label = new JLabel("There directory");
-    panel.add(label, constraints);
-    
-    JTextField tf3 = new JTextField(20);
-    tf3.addMouseListener(new MouseListener() {
-		@Override
-		public void mouseClicked(MouseEvent arg0) {
-			if(arg0.getClickCount()==2) {
-				tf3.setText("");
-			}
-			
-		}
-
-		@Override
-		public void mouseEntered(MouseEvent arg0) {
-			// TODO Auto-generated method stub
-			
-		}
-
-		@Override
-		public void mouseExited(MouseEvent arg0) {
-			// TODO Auto-generated method stub
-			
-		}
-
-		@Override
-		public void mousePressed(MouseEvent arg0) {
-			// TODO Auto-generated method stub
-			
-		}
-
-		@Override
-		public void mouseReleased(MouseEvent arg0) {
-			// TODO Auto-generated method stub
-			
-		}
-    	
-    });    
-    panel.add(tf3, constraints);
-    
-    constraints.gridy=3;
-    constraints.gridx=1;
-    JButton connect = new JButton("connect");
-      panel.add(connect, constraints);
-      connect.addActionListener(t->{
-    	  
-      });
-
-  }
+public class Sendfile {
+	
+void sendfile(String ip,String file1, String file2){
+	//FileServer server = new FileServer(1988,file2);
+	//server.start();	
+	
+	FileClient client = new FileClient(ip,3158,file1);
+}
 
 }
+
+class FileClient{
+private Socket s;
+	
+	public FileClient(String host, int port, String file) {
+		try {
+			s = new Socket(host, port);
+			sendFile(file);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}		
+	}
+	
+	public void sendFile(String filename) throws IOException {
+		if(new File(filename).exists()) {
+		DataOutputStream dos = new DataOutputStream(s.getOutputStream());
+		FileInputStream fis = new FileInputStream(filename);
+		byte[] buffer = new byte[4096];
+		
+		while (fis.read(buffer) > 0) {
+			dos.write(buffer);
+		}
+		
+		fis.close();
+		s.close();
+		dos.close();	
+			}
+		else {
+			Files.write(Paths.get(filename),JOptionPane.showInputDialog(new Frame(), "This file is currently empty. Write something to it?").getBytes());
+		}
+		}
+	}
+
+/*
+class FileServer extends Thread{
+private ServerSocket ss;
+final private String newFileName;
+	public FileServer(int port, String newFileName) {
+		this.newFileName=newFileName;
+		try {
+			ss = new ServerSocket(port);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public void run() {
+		while (true) {
+			try {
+				Socket clientSock = ss.accept();
+				saveFile(clientSock);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	private void saveFile(Socket clientSock) throws IOException {
+		DataInputStream dis = new DataInputStream(clientSock.getInputStream());
+		FileOutputStream fos = new FileOutputStream(newFileName);
+		byte[] buffer = new byte[4096];
+		
+		int filesize = 15123; // Send file size in separate msg
+		int read = 0;
+		int totalRead = 0;
+		int remaining = filesize;
+		while((read = dis.read(buffer, 0, Math.min(buffer.length, remaining))) > 0) {
+			totalRead += read;
+			remaining -= read;
+			System.out.println("read " + totalRead + " bytes.");
+			fos.write(buffer, 0, read);
+		}
+		
+		fos.close();
+		dis.close();
+	}
+	
+	
+}*/

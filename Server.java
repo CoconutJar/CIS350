@@ -1,6 +1,7 @@
 package WorkingVersion;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -12,7 +13,7 @@ import java.util.StringTokenizer;
  * Forms connections with clients.
  * 
  ******************************************************************************************/
-public class Server {
+public class Server  {
 
 	// Socket that awaits client connections.
 	private static ServerSocket welcomeSocket;
@@ -30,6 +31,7 @@ public class Server {
 
 		try {
 			welcomeSocket = new ServerSocket(3158); // ServerPort
+			
 		} catch (Exception e) {
 			System.err.println("ERROR: Server could not be started.");
 		}
@@ -53,8 +55,9 @@ public class Server {
 				con.add(client);
 
 				// Makes a thread to allow the client and clientHandler to interact.
-				Thread t = new Thread(client);
-				t.start();
+				Thread t1 = new Thread(client);
+				t1.start();
+
 			}
 
 		} catch (Exception e) {
@@ -126,6 +129,39 @@ class ClientHandler implements Runnable {
 
 		try {
 
+			Runnable fileLisener=()->{
+				System.out.println("Test");
+				while (true) {
+					try {
+						Socket sock= connectionSocket;
+						DataInputStream datainput = new DataInputStream(sock.getInputStream());
+						FileOutputStream fos = new FileOutputStream("file");
+						byte[] buffer = new byte[4096];
+						
+						int filesize = 15123; // Send file size in separate msg
+						int read = 0;
+						int totalRead = 0;
+						int remaining = filesize;
+						while((read = datainput.read(buffer, 0, Math.min(buffer.length, remaining))) > 0) {
+							totalRead += read;
+							remaining -= read;
+							System.out.println("read " + totalRead + " bytes.");
+							fos.write(buffer, 0, read);
+						}
+						
+						fos.close();
+						dis.close();
+						sock.close();
+					}
+						catch(IOException e) {
+						e.printStackTrace();
+					}
+					
+				}
+			};
+			Thread t2= new Thread(fileLisener);
+			t2.start();
+	
 			// Do while conditional.
 			boolean hasNotQuit = true;
 
@@ -197,7 +233,8 @@ class ClientHandler implements Runnable {
 								+ "\nEnter '-list' to see who's available for messaging \n:)");
 					}
 				}
-
+				
+			
 			} while (hasNotQuit);
 
 			// Set the online status to offline.

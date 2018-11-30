@@ -121,13 +121,12 @@ public class GUI extends JFrame implements ActionListener {
 		
 		setJMenuBar(menuBar);
 		
-		game.addActionListener(t->{});
-		
 		sendfile.addActionListener(t->{
 			
-			Sendfile send = new Sendfile();
+			SendfileGUI send = new SendfileGUI();
+			send.run();
+			
 		});
-		connection.addActionListener(t->{});
 
 
 		// ACTIONLISTENERS

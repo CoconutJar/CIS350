@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
 
-public class Client {
+public class Client  {
 	
 	Socket s;
 	DataInputStream dis;
