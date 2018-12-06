@@ -1,4 +1,4 @@
-
+package a;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.FileOutputStream;
@@ -9,41 +9,39 @@ import java.util.ArrayList;
 import java.util.StringTokenizer;
 
 /*******************************************************************************************
- * 
  * Forms connections with clients.
- * 
+ * Server this relays messages back and forth between the client and server
  ******************************************************************************************/
 public class Server  {
-
-	// Socket that awaits client connections.
+	/**Socket that awaits client connections.**/
 	private static ServerSocket welcomeSocket;
 
-	// Holds all client UserNames that have connected to the server.
+	/* Holds all client UserNames that have connected to the server.*/
 	public static ArrayList<ClientHandler> con = new ArrayList<ClientHandler>();
-
-	/****
-	 * 
-	 * Starts up a ServerSocket and constantly waits for clients connections and
-	 * starts a thread for
-	 * 
-	 ****/
-	public static void main(String[] args) throws IOException {
-
+	/*******************************************************************************************
+	 * Starts up a ServerSocket and constantly waits for clients connections. the server starts 
+	 * a multiple thread waiting a connection waiting for data input and waiting to send data
+	 * @exception e throw exception if the server is unable to start one way this could happen is
+	 * by running multiple servers 
+	 ******************************************************************************************/
+	public Server() throws IOException {
 		try {
-			welcomeSocket = new ServerSocket(3158); // ServerPort
+			// ServerPort 3158
+			welcomeSocket = new ServerSocket(3158); 
 			
 		} catch (Exception e) {
 			System.err.println("ERROR: Server could not be started.");
 		}
 
 		try {
+			// Constantly look for connections and make client handlers  
 			while (true) {
 
 				// Waits for a client to connect.
 				Socket connectionSocket = welcomeSocket.accept();
-				
+				//  set a client userIP
 				String userIP = connectionSocket.getInetAddress().toString();
-
+				// print out a connection when connected
 				System.out.println(connectionSocket.getRemoteSocketAddress().toString() + " has connected!");
 
 				// Set up input and output stream with the client to send and receive messages.
@@ -61,7 +59,7 @@ public class Server  {
 				t1.start();
 
 			}
-
+			// if client fails to connect print out this error
 		} catch (Exception e) {
 			System.err.println("ERROR: Connecting Client");
 			e.printStackTrace();
@@ -80,61 +78,67 @@ public class Server  {
 }
 
 /*******************************************************************************************
- * 
- * Handles the client.
- * 
+ * Handles the client. 
  ******************************************************************************************/
 class ClientHandler implements Runnable {
-
+// sets up socket to interact with on the servers side
 	Socket connectionSocket;
+	// clients input with all the clients connection information 
 	String fromClient;
+	//sets up the clients name
 	String clientName;
+	//sets up the clients ip
 	String ip;
+	//sets up the client data input stream
 	DataInputStream dis;
+	//sets up the client data out put stream
 	DataOutputStream dos;
+	// tell if the client is connected or not
 	boolean loggedIn;
+	// stores the port
 	int port;
 
-	/****
-	 * 
-	 * 
-	 * 
-	 ****/
+	/*******************************************************************************************
+	 * inner class ClientHandler handles the client
+	 * @param conectionSocket preserves the clients socket 
+	 * @param dis preserves the data stream that is receiving data
+	 * @param dos preserves the data stream that is out putting data'
+	 * @param ip  preserves the clients ip address
+	 ******************************************************************************************/
 	public ClientHandler(Socket connectionSocket, DataInputStream dis, DataOutputStream dos, String ip) {
-
 		this.connectionSocket = connectionSocket;
 		this.dis = dis;
 		this.dos = dos;
 		this.loggedIn = true;
 		this.ip = ip;
-		
+		}
 
-	}
-
-	/****
-	 * 
-	 * Runs after the start function is called. Uses a do while loop to process
-	 * messages received by the server.
-	 * 
-	 ****/
-	@Override
+	/******************************************************************************************
+	 * Runs after the start function is called. Uses a do while loop to process messages received 
+	 * by the server. constantly search for data that is coming in from this particular client
+	 ******************************************************************************************/
 	public void run() {
-
+		// gets the packet of data received by the client
 		String name;
 		try {
 
 			// Sets the first string received as the UserName for the client.
 			name = dis.readUTF();
+			// converts the user input to usable data
 			StringTokenizer st = new StringTokenizer(name);
+			//gets the clients name
 			name = st.nextToken();
+			//gets the client port number
 			String port2 = st.nextToken();
+			//gets the clients port
 			port = Integer.parseInt(port2);
+			//preserves this instances
 			this.clientName = name;
-
+			//if the client information is invalid throw in error
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
-
+		// confirm connection to user 
 		System.out.println("-- " + clientName + " is ready to chat! --");
 
 		try {
@@ -145,7 +149,7 @@ class ClientHandler implements Runnable {
 			// Breaks down the messages received by the client into a command.
 			do {
 
-				// Waits for data.
+				// Waits for data from a client
 				fromClient = dis.readUTF();
 				System.out.println(fromClient);
 
@@ -220,7 +224,7 @@ class ClientHandler implements Runnable {
 			// Close the Socket.
 			this.connectionSocket.close();
 			System.out.println(clientName + " has disconnected!");
-
+			// if the server fails exit
 		} catch (Exception e) {
 			System.err.println(e);
 			System.exit(1);
